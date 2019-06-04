@@ -109,7 +109,7 @@ def download_RING(pdb_ids, download_dir='.', time_sleep=5):
                     # Download RING output as an archive
                     r = requests.get("http://protein.bio.unipd.it/ring_download/{}/{}".format(job_ids[i], archive_file))
                     # Write the archive file
-                    with open(download_dir + archive_file, "wb") as fout:
+                    with open(download_dir + '/' + archive_file, "wb") as fout:
                         fout.write(r.content)
             # Debug info
             logging.debug("Status for pdb {}: {} with job id {}".format(pdb_ids[i], job_status[i], job_ids[i]))
