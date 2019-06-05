@@ -7,6 +7,7 @@ import requests
 import json
 import zipfile
 import time
+import warnings
 # Import BioPython utils
 from Bio.PDB import PDBList, calc_angle, calc_dihedral, PPBuilder, is_aa, PDBIO, NeighborSearch, DSSP, HSExposureCB
 from Bio.PDB.PDBParser import PDBParser
@@ -196,6 +197,7 @@ def res2features(df):
 
     return df1
 
+
 def struct2features(df):
     """
     REQUIRE:
@@ -235,44 +237,86 @@ def struct2features(df):
     return df1
 
 
-def contacts2features(df, df_ring):
+def contacts2features(df, ignore_warnings = True):
     """
     REQUIRE:
     from sklearn.feature_extraction.text import CountVectorizer
     import pandas as pd
 
     INPUT:
-    df = dataframe of main features where to add the ring ones
-    df_ring = a dataframe containing all the contacts of all the residues
+    df = dataframe of main features with columns EDGE_TYPE and EDGE_LOC
 
     OUTPUT:
-    The main features dataframe merged with the ring dataframe with CountVectorize of EDGE_LOC and EDGE_TYPE
+    The main features dataframe with CountVectorize of EDGE_LOC and EDGE_TYPE
     """
+    #Ignore warnings
+    if ignore_warnings:
+        warnings.filterwarnings("ignore")
 
-    #One-Hot-Econding of contacts type on ring dataframe
+    #NaN transformed to a categoricacl value
+    df.EDGE_LOC[df.EDGE_LOC.isna()] = "NO_EDGE_LOC"
+    df.EDGE_TYPE[df.EDGE_TYPE.isna()] = "NO_EDGE_TYPE"
+    edge_loc = df.EDGE_LOC
+    edge_type = df.EDGE_TYPE
+    #Call object
     vectorizer = CountVectorizer()
-    X_loc = vectorizer.fit_transform(df_ring.EDGE_LOC)
-    loc_col = [i.upper() for i in vectorizer.get_feature_names()]
-    X_type = vectorizer.fit_transform(df_ring.EDGE_TYPE)
-    type_col = [i.upper() for i in vectorizer.get_feature_names()]
-    #Create dataframe of CountVectorize
-    df_loc = pd.DataFrame(X_loc.toarray(), columns=loc_col)
-    df_type = pd.DataFrame(X_type.toarray(), columns=type_col)
-    #Merge the one-hot-encoding
-    df_edge = pd.merge(df_loc, df_type,
+    #One-Hot-Enc of EDGE_LOC
+    X_loc = vectorizer.fit_transform(edge_loc)
+    df_loc = pd.DataFrame(X_loc.toarray(),
+                          columns=[i.upper() for i in vectorizer.get_feature_names()])
+    #One-Hot-Enc of EDGE_TYPE
+    X_type = vectorizer.fit_transform(edge_type)
+    df_type = pd.DataFrame(X_type.toarray(),
+                          columns=[i.upper() for i in vectorizer.get_feature_names()])
+    #Merge LOC and TYPE
+    df_rings = pd.merge(df_loc, df_type,
                        left_index=True,
                        right_index=True)
-    df2 = pd.merge(df_ring, df_edge,
-                   left_index=True,
-                   right_index=True)
-    #GroupBy operation with sum
-    df3 = df2.groupby(['PDB_ID', 'CHAIN_ID_A', 'RES_ID_A'],
-                      squeeze=False, sort = True,
-                      observed=True, as_index=False).sum()
-    df3.drop(['RES_ID_B'], axis=1, inplace=True)
-    #Merge rings features to previous deatures dataframe
-    df_final = pd.merge(df, df3,
-                        left_on=['PDB_ID', 'CHAIN_ID', 'RES_ID'],
-                        right_on=['PDB_ID', 'CHAIN_ID_A', 'RES_ID_A'],
-                        how='left')
+    #Merge to original dataframe
+    df_final = pd.merge(df, df_rings, left_index=True, right_index=True)
+
+    #Restore warnings
+    warnings.filterwarnings('default')
+
     return df_final
+
+
+def chain_len(df, get_time = False, ignore_warnings = False):
+    """
+    REQUIRE:
+    import pandas as pd
+
+    INPUT:
+    df = dataframe of main features with CHAIN_ID and PDB_ID
+    time = If true print the time needed to complete the procedure (default False)
+    warnings = If true it will print the warnings (default False)
+
+    OUTPUT:
+    A dataframe with the variable CHAIN_LEN as feature
+    """
+    #Ignore warnings
+    if ignore_warnings:
+        warnings.filterwarnings("ignore")
+
+    #Get matrix ready
+    df1 = df
+    df1['CHAIN_LEN'] = np.array(0)
+
+    #Start time
+    start = time.time()
+
+    #Start cycle where for each chain we add the chains lenghts to all the resiudes of that chain
+    for pdb_id in set(df.PDB_ID.unique()):
+        for chain in set(df.CHAIN_ID[df.PDB_ID == pdb_id]):
+            len_chain = len(df.CHAIN_ID[(df.CHAIN_ID == chain) & (df.PDB_ID == pdb_id)])
+            df1['CHAIN_LEN'][(df.PDB_ID == pdb_id) & (df.CHAIN_ID == chain)] = len_chain
+
+    #Print time if passed as arg
+    if get_time:
+        print('Time passed: {}'.format(time.time() - start))
+
+    #Restore warnings
+    warnings.filterwarnings('default')
+
+    #Return
+    return df1
