@@ -11,8 +11,9 @@ import warnings
 # Import BioPython utils
 from Bio.PDB import PDBList, calc_angle, calc_dihedral, PPBuilder, is_aa, PDBIO, NeighborSearch, DSSP, HSExposureCB
 from Bio.PDB.PDBParser import PDBParser
-# Import sklearn methods
+# Import other methods
 from sklearn.feature_extraction.text import CountVectorizer
+from scipy import signal
 
 # Function for tagging residues as LIP/non-LIP
 # Overwrites entries in the second dataset with LIP flag from the first dataset
@@ -320,3 +321,83 @@ def chain_len(df, get_time = False, ignore_warnings = False):
 
     #Return
     return df1
+
+
+def sliding_windows(data, window, std, ignore_warnings = False, get_time = False):
+    """
+    REQUIRE:
+    import pandas as pd
+    import numpy as np
+    import signal from scipy
+
+    INPUT:
+    data = dataframe of main features
+    window = the size of a window (int)
+    std = the standard deviation of the gaussian filter (float)
+    time = If true print the time needed to complete the procedure (default False)
+    warnings = If true it will print the warnings (default False)
+
+    OUTPUT:
+    A dataframe with sliding windows applied
+    """
+
+    #Ignore warnings
+    if ignore_warnings:
+        warnings.filterwarnings("ignore")
+
+    start = time.time()
+    df_windows = data.copy()
+    k = window
+    sd = std
+
+    #Cycle for every protein
+    for pdb_id in data.PDB_ID.unique():
+        #Cycle for every chain in a given protein
+        for chain in set(data.CHAIN_ID[data.PDB_ID == pdb_id].unique()):
+
+            #Work on a reduced dataset
+            df_sliced = df_windows[(data.PDB_ID == pdb_id)
+                                   & (data.CHAIN_ID == chain)]
+
+            # SET PDB_ID, CHIAN_ID and RES_ID to a separated df, we are not going to apply gaussian filter on them
+            info_sliced = df_sliced.iloc[:, 0:3]
+
+            #Shortcut name for lengths
+            chain_len = len(data.CHAIN_ID[(data.PDB_ID == pdb_id)
+                                        & (data.CHAIN_ID == chain)])
+
+            #Apply a symmatric mirroring at the start of the chain of size k//2
+            df_windows_start = pd.DataFrame(np.array(df_sliced.iloc[1:(k//2+1), ]),
+                                            index=np.arange(-k//2 + 1, 0, step = 1),
+                                            columns=list(data.columns)).sort_index()
+
+            #Apply a symmatric mirroring at the end of the chain of k//2
+            df_windows_end = pd.DataFrame(np.array(df_sliced.iloc[chain_len-(k//2 + 1):chain_len-1, ]),
+                                          index=np.arange(chain_len-1 + k//2,chain_len-1, step = -1),
+                                          columns=list(data.columns)).sort_index()
+
+            #Append symmatric mirroring into one dataframe
+            df_with_start_sym = df_windows_start.append(df_sliced)
+            df_win_k = df_with_start_sym.append(df_windows_end)
+
+            ### MAIN: COMPUTE GAUSSIAN FILTER OF GIVEN DATAFRAME
+            sliced = df_win_k.iloc[:, 3:]
+            window = signal.gaussian(k, std = sd) #Here put k
+            sliced = sliced.rolling(window = k, center = True).apply(lambda x: np.dot(x,window)/k) #here put k
+            #sliced = sliced.rolling(window = 3, center = True, win_type = 'gaussian').sum(std=1)
+
+            # Reunite filtered features with PDB_ID, CHAIN_ID, RES_ID
+            tot_sliced = pd.merge(info_sliced, sliced.iloc[0:chain_len+k//2,:],
+                                  right_index=True, left_index=True) #here is chain_len + k//2
+
+            ### Update the dataframe with the filtered features of given chain
+            df_windows[(df_windows.PDB_ID == pdb_id) & (df_windows.CHAIN_ID == chain)] = tot_sliced
+
+    #If get_time print time needed to end process
+    if get_time:
+        print(time.time() - start)
+
+    #Restore warnings
+    warnings.filterwarnings('default')
+
+    return df_windows
