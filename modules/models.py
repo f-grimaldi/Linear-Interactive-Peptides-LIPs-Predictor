@@ -54,6 +54,7 @@ def sliding_windows(data, window, std, ignore_warnings = False, get_time = False
         warnings.filterwarnings("ignore")
 
     start = time.time()
+    #Set variables
     df_windows = data.copy()
     k = window
     sd = std
@@ -63,7 +64,7 @@ def sliding_windows(data, window, std, ignore_warnings = False, get_time = False
         #Cycle for every chain in a given protein
         for chain in set(data.CHAIN_ID[data.PDB_ID == pdb_id].unique()):
 
-            #Work on a reduced dataset
+            #Work on a reduced dataset: we apply sliding windows for every chain
             df_sliced = df_windows[(data.PDB_ID == pdb_id)
                                    & (data.CHAIN_ID == chain)]
 
@@ -80,11 +81,12 @@ def sliding_windows(data, window, std, ignore_warnings = False, get_time = False
                                             columns=list(data.columns)).sort_index()
 
             #Apply a symmatric mirroring at the end of the chain of k//2
+
             df_windows_end = pd.DataFrame(np.array(df_sliced.iloc[chain_len-(k//2 + 1):chain_len-1, ]),
                                           index=np.arange(chain_len-1 + k//2,chain_len-1, step = -1),
                                           columns=list(data.columns)).sort_index()
 
-            #Append symmatric mirroring into one dataframe
+            #Now we merge reunite this dataframe
             df_with_start_sym = df_windows_start.append(df_sliced)
             df_win_k = df_with_start_sym.append(df_windows_end)
 
@@ -92,7 +94,6 @@ def sliding_windows(data, window, std, ignore_warnings = False, get_time = False
             sliced = df_win_k.iloc[:, 3:]
             window = signal.gaussian(k, std = sd) #Here put k
             sliced = sliced.rolling(window = k, center = True).apply(lambda x: np.dot(x,window)/k) #here put k
-            #sliced = sliced.rolling(window = 3, center = True, win_type = 'gaussian').sum(std=1)
 
             # Reunite filtered features with PDB_ID, CHAIN_ID, RES_ID
             tot_sliced = pd.merge(info_sliced, sliced.iloc[0:chain_len+k//2,:],
