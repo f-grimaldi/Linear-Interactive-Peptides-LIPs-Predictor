@@ -1,0 +1,16 @@
+{
+  "pdb_dir": "./pdb_files",
+  "ring_force": 0,
+  "ring_dir": "./ring_files",
+  "window_size": 1,
+  "vocabularies": {
+    "res_name": ["ALA", "VAL", "TYR"]
+  },
+  "dssp_path": "/usr/local/bin/mkdssp",
+  "contact_threshold": 3.5,
+  "intra_inter_ratio": 0,
+  "no_edge_loc": 1,
+  "no_edge_type": 1,
+  "no_edge": 1,
+  "model_dir": "./model_files"
+}

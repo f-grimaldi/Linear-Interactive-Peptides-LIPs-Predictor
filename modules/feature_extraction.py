@@ -53,6 +53,9 @@ def get_PDB(pdb_ids, chain_len=True, pdb_dir='.'):
     ds_residues = list()
     # Loop thorugh every protein
     for pdb_id in pdb_ids:
+        # Debug
+        logging.debug('PDB id: ' + pdb_id)
+        logging.debug('PDB dir: ' + pdb_dir)
         # Get structure of the protein
         structure = PDBParser(QUIET=True).get_structure(pdb_id, pdb_dir + '/pdb{}.ent'.format(pdb_id))
         # We select only the 0-th model
