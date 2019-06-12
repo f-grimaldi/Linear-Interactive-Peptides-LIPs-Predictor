@@ -35,6 +35,7 @@ def LIP_tag(ds_original, ds_residues):
         #Now we set to 1 all the residue whose features are the one desired
         ds_residues.loc[sliced, 'LIP'] = 1
         ds_residues.loc[sliced, 'LIP_SCORE'] = 1
+    return ds_residues
 
 
 # Download PDB specified in a list of PDB ids
@@ -47,24 +48,24 @@ def download_PDB(pdb_ids, pdb_dir='.'):
         pdbl.retrieve_pdb_file(pdb_id, pdir=pdb_dir, file_format='pdb')
 
 # Function for getting residues contained into PDB files, given their ids
-def get_PDB(pdb_ids, chain_len=True, pdb_dir='.'):
+def get_PDB(pdb_ids, valid_chains=None, chain_len=True, pdb_dir='.'):
     # New list for residues
     # It will be turned into DataFrame later
     ds_residues = list()
     # Loop thorugh every protein
     for pdb_id in pdb_ids:
-        # Debug
-        logging.debug('PDB id: ' + pdb_id)
-        logging.debug('PDB dir: ' + pdb_dir)
         # Get structure of the protein
         structure = PDBParser(QUIET=True).get_structure(pdb_id, pdb_dir + '/pdb{}.ent'.format(pdb_id))
         # We select only the 0-th model
         model = structure[0]
         # Loop through every model's chain
         for chain in model:
+            # Check chain is in valid chains
+            if (valid_chains is not None) and ((pdb_id, chain.id) not in valid_chains):
+                continue
             for residue in chain:
                 # Do not take into account non-aminoacidic residues (e.g. water molecules)
-                if(not is_aa(residue)):
+                if not is_aa(residue):
                     continue
                 # Add an entry to the residues list
                 ds_residues.append((pdb_id, model.id, chain.id, residue.id[1], residue.get_resname(), 0, 0))
@@ -124,6 +125,10 @@ def get_DSSP(pdb_ids, pdb_dir='.', dssp_path='/usr/local/bin/mkdssp', drop_featu
     # Drop useless features, if any
     if drop_features:
         ds_dssp = ds_dssp.drop(drop_features, axis=1)
+    # Turns NA to nan
+    ds_dssp = ds_dssp.replace('NA', np.nan)
+    # Handle nan
+    ds_dssp.REL_ASA[ds_dssp.REL_ASA.isna()] = ds_dssp.REL_ASA.mean()
     # Return DSSP dataset
     return ds_dssp
 
