@@ -149,7 +149,7 @@ def get_DSSP(pdb_ids, pdb_dir='.', dssp_path='/usr/local/bin/mkdssp', drop_featu
     # Turns NA to nan
     ds_dssp = ds_dssp.replace('NA', np.nan)
     # Handle nan
-    ds_dssp.REL_ASA[ds_dssp.REL_ASA.isna()] = ds_dssp.REL_ASA.mean()
+    ds_dssp.loc[ds_dssp.REL_ASA.isna(), 'REL_ASA'] = ds_dssp.REL_ASA.mean()
     # Return DSSP dataset
     return ds_dssp
 
@@ -300,85 +300,3 @@ def get_RING_contacts(ds_ring, drop_features=[]):
         ds_contacts = ds_contacts.drop(drop_features, axis=1)
     # Return dataset with RING edges info per residue
     return ds_contacts
-
-def struct2features(df):
-    """
-    REQUIRE:
-    from sklearn.feature_extraction.text import CountVectorizer
-    import pandas as pd
-
-    INPUT:
-    A dataframe containing a SEC_STRUCT columns
-
-    OUTPUT:
-    The same dataframe merged with a matrix of the output of CountVectorize of SEC_STRUCT
-
-    WARNING:
-    CountVectorize remove words too short such our tags of the secondary structure, for this reason we need to
-    substitute the tags with their original meaning.
-    See: https://biopython.org/DIST/docs/api/Bio.PDB.DSSP%27-pysrc.html for the legend of the tags
-    """
-
-    df.loc[df.SEC_STRUCT == '-', 'SEC_STRUCT'] = "NO_STRUCT"
-    df.loc[df.SEC_STRUCT == '0', 'SEC_STRUCT'] = "ZERO"
-    df.loc[df.SEC_STRUCT == 'B', 'SEC_STRUCT'] = 'ISOLATED_BETA_BRIGE'
-    df.loc[df.SEC_STRUCT == 'E', 'SEC_STRUCT'] = 'STRAND'
-    df.loc[df.SEC_STRUCT == 'G', 'SEC_STRUCT'] = '3-10_ELIX'
-    df.loc[df.SEC_STRUCT == 'H', 'SEC_STRUCT'] = 'ALPHA_ELIX'
-    df.loc[df.SEC_STRUCT == 'I', 'SEC_STRUCT'] = 'PI_ELIX'
-    df.loc[df.SEC_STRUCT == 'S', 'SEC_STRUCT'] = 'BEND'
-    df.loc[df.SEC_STRUCT == 'T', 'SEC_STRUCT'] = 'TURN'
-    sec_struct = df.SEC_STRUCT
-    #Apply CountVectorizer
-    vectorizer = CountVectorizer()
-    X = vectorizer.fit_transform(sec_struct)
-    #Create dataframe of CountVectorize
-    df_ss = pd.DataFrame(X.toarray(), columns=[i.upper() for i in vectorizer.get_feature_names()])
-    #Merge
-    df1 = pd.merge(df, df_ss, left_index=True, right_index=True)
-
-    return df1
-
-
-def contacts2features(df, ignore_warnings = True):
-    """
-    REQUIRE:
-    from sklearn.feature_extraction.text import CountVectorizer
-    import pandas as pd
-
-    INPUT:
-    df = dataframe of main features with columns EDGE_TYPE and EDGE_LOC
-
-    OUTPUT:
-    The main features dataframe with CountVectorize of EDGE_LOC and EDGE_TYPE
-    """
-    #Ignore warnings
-    if ignore_warnings:
-        warnings.filterwarnings("ignore")
-
-    #NaN transformed to a categoricacl value
-    df.EDGE_LOC[df.EDGE_LOC.isna()] = "NO_EDGE_LOC"
-    df.EDGE_TYPE[df.EDGE_TYPE.isna()] = "NO_EDGE_TYPE"
-    edge_loc = df.EDGE_LOC
-    edge_type = df.EDGE_TYPE
-    #Call object
-    vectorizer = CountVectorizer()
-    #One-Hot-Enc of EDGE_LOC
-    X_loc = vectorizer.fit_transform(edge_loc)
-    df_loc = pd.DataFrame(X_loc.toarray(),
-                          columns=[i.upper() for i in vectorizer.get_feature_names()])
-    #One-Hot-Enc of EDGE_TYPE
-    X_type = vectorizer.fit_transform(edge_type)
-    df_type = pd.DataFrame(X_type.toarray(),
-                          columns=[i.upper() for i in vectorizer.get_feature_names()])
-    #Merge LOC and TYPE
-    df_rings = pd.merge(df_loc, df_type,
-                       left_index=True,
-                       right_index=True)
-    #Merge to original dataframe
-    df_final = pd.merge(df, df_rings, left_index=True, right_index=True)
-
-    #Restore warnings
-    warnings.filterwarnings('default')
-
-    return df_final

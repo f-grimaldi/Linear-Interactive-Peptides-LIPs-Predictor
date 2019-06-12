@@ -2,7 +2,7 @@
   "pdb_dir": "./pdb_files",
   "ring_force": 0,
   "ring_dir": "./ring_files",
-  "window_size": 1,
+  "window_size": 5,
   "window_std": 1,
   "map_struct": {
     "-": "NO_STRUCT",
@@ -26,5 +26,11 @@
   "no_edge_type": 1,
   "no_edge": 1,
   "model_dir": "./model_files",
-  "model_name": "default"
+  "model_file": "default",
+  "model": {
+    "name": "RandomForestClassifier",
+    "args": {
+      "n_estimators": 119
+    }
+  }
 }

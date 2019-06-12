@@ -103,7 +103,7 @@ def sliding_window(data, k, sd):
             ### MAIN: COMPUTE GAUSSIAN FILTER OF GIVEN DATAFRAME
             sliced = df_win_k.iloc[:, 3:]
             window = signal.gaussian(k, std = sd)
-            sliced = sliced.rolling(window = k, center = True).apply(lambda x: np.dot(x,window)/k)
+            sliced = sliced.rolling(window = k, center = True).apply(lambda x: np.dot(x,window)/k, raw=False)
 
             # Reunite filtered features with PDB_ID, CHAIN_ID, RES_ID
             tot_sliced = pd.merge(info_sliced, sliced.iloc[0:chain_len+k//2,:],

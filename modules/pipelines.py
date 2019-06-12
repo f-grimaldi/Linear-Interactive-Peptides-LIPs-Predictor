@@ -8,6 +8,16 @@ from joblib import dump, load
 # Import custom libraries
 from modules.feature_extraction import *
 from modules.feature_preprocessing import *
+# Import models
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+
+# Define list of available classifiers
+available_clf = ['RandomForestClassifier', 'LogisticRegression', 'MLPCLassifier', 'KNeighborsClassifier', 'SVC', 'QuadraticDiscriminantAnalysis']
 
 # Define main pipeline used by the program
 def main_pipeline(pdb_ids=[], config={}):
@@ -127,7 +137,7 @@ def predict_pipeline(pdb_ids, config={}):
     # Debug
     logging.debug(ds_predict.columns)
     # Load saved model
-    model = load('{}/{}.joblib'.format(config.get('model_dir'), config.get('model_name')))
+    model = load('{}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
     # Execute predictions
     LIP_SCORE, LIP = model.predict_proba(ds_predict)[:,1], model.predict(ds_predict)
     # Add columns to main DataFrame
@@ -160,12 +170,29 @@ def train_pipeline(config={}):
         pdb_ids -= set(config.get('exclude'))
     # Filter out invalid chains
     config['valid_chains'] = set([(row['pdb'], row['chain']) for idx, row in ds_training.iterrows()])
+    # Define model
+    model = None
+    # Check if custom classifier must be used
+    if config.get('model'):
+        # Check if classifier is valid
+        if config.get('model', {}).get('name') not in available_clf:
+            logging.error('Selected model is not valid\nAborting...')
+            exit()
+        else:
+            # Define model instance
+            model = eval('{}'.format(config.get('model', {}).get('name')))
+            # Build the model with given arguments
+            model = model(**config.get('model', {}).get('args', {}))
+    else:
+        # Retrain stored model
+        model = load('{}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
+    # Debug
+    logging.debug('Model trained')
+    logging.debug(model)
     # Extract features
     ds_residues, ds_predict = main_pipeline(pdb_ids, config)
     # Add LIP and LIP scores
     ds_residues = LIP_tag(ds_training, ds_residues)
-    # Load saved model
-    model = load('{}/{}.joblib'.format(config.get('model_dir'), config.get('model_name')))
     # Debug
     logging.debug('Datasets for training:')
     logging.debug(ds_predict.head())
@@ -174,5 +201,5 @@ def train_pipeline(config={}):
     model.fit(ds_predict, ds_residues['LIP'])
     print('New model has been trained')
     # Overwrite the model
-    dump(model, '{}/{}.joblib'.format(config.get('model_dir'), config.get('model_name')))
-    print('New model has been saved to disk as {}/{}.joblib'.format(config.get('model_dir'), config.get('model_name')))
+    dump(model, '{}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
+    print('New model has been saved to disk as {}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
