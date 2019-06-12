@@ -25,8 +25,8 @@ Software for predicting LIP tagged aminoacidic residues
 
 LIP_predictor is composed of two main scripts:
 
-    1. *train.py*
-    2. *predict.py*
+    1. train.py
+    2. predict.py
 
 *Note*: command are given from inside LIP_predictor directory in this guide.
 
