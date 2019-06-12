@@ -44,16 +44,28 @@ def download_PDB(pdb_ids, pdb_dir='.'):
     pdbl = PDBList()
     # Fetch every protein
     for pdb_id in pdb_ids:
+        # Debug
+        logging.debug('PDB file which will be downloaded')
+        logging.debug(pdb_id)
         # Execute fetching of the protein (pdb file)
         pdbl.retrieve_pdb_file(pdb_id, pdir=pdb_dir, file_format='pdb')
 
 # Function for getting residues contained into PDB files, given their ids
 def get_PDB(pdb_ids, valid_chains=None, chain_len=True, pdb_dir='.'):
+    # Debug
+    logging.debug('Directory for PDB files')
+    logging.debug(pdb_dir)
+    logging.debug('Chain length')
+    logging.debug(chain_len)
+    logging.debug('Valid chains')
+    logging.debug(valid_chains)
     # New list for residues
     # It will be turned into DataFrame later
     ds_residues = list()
     # Loop thorugh every protein
     for pdb_id in pdb_ids:
+        # Define an array of aminoacids for the current protein
+        residues = list()
         # Get structure of the protein
         structure = PDBParser(QUIET=True).get_structure(pdb_id, pdb_dir + '/pdb{}.ent'.format(pdb_id))
         # We select only the 0-th model
@@ -68,9 +80,18 @@ def get_PDB(pdb_ids, valid_chains=None, chain_len=True, pdb_dir='.'):
                 if not is_aa(residue):
                     continue
                 # Add an entry to the residues list
-                ds_residues.append((pdb_id, model.id, chain.id, residue.id[1], residue.get_resname(), 0, 0))
+                residues.append((pdb_id, model.id, chain.id, residue.id[1], residue.get_resname(), 0, 0))
+        if not residues:
+            logging.warning('A protein {} has no valid residues'.format(pdb_id))
+        ds_residues += residues
+    if not ds_residues:
+        logging.error('No valid aminoacidics found\nAborting...')
+        exit()
     # Turn list into dataframe
     ds_residues = pd.DataFrame(ds_residues)
+    # Debug
+    logging.debug('PDB dataset')
+    logging.debug(ds_residues)
     # Define dataset column names
     ds_residues.columns = ['PDB_ID', 'MODEL_ID', 'CHAIN_ID', 'RES_ID', 'RES_NAME', 'LIP_SCORE', 'LIP']
     # Check if chain lengths should be added
@@ -149,6 +170,15 @@ def download_RING(pdb_ids, ring_dir='.', time_sleep=5):
         r = requests.post('http://protein.bio.unipd.it/ringws/submit',
                           data=json.dumps(req),
                           headers={'content-type': 'application/json'})
+        # TODO error on RING request
+        if r.status_code != 200:
+            logging.error('Server responded with error\nAborting...')
+            exit()
+        # Debug
+        logging.debug('RING request')
+        logging.debug(req)
+        logging.debug('RING output file')
+        logging.debug(r.text)
         # Define id of the job provided by RING
         job_ids[i] = json.loads(r.text)['jobid']
     # Debug info
