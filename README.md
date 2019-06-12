@@ -148,7 +148,7 @@ In order to get information of the context, a sliding windows by a rolling proce
 Parameters of sliding windows:
 
     1. windows size (integer, default = 5): size of the windows (usually an odd number for symmetric purpose). 
-    2. std (float, default = 1): standard deviation of the gaussian filter. Higher values mean a minor decrease of the            multiplicative factor as the distance increase.
+    2. std (float, default = 1): standard deviation of the gaussian filter. Higher values mean a minor decrease of the multiplicative factor as the distance increase.
 
 
 N.B.
