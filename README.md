@@ -3,6 +3,23 @@
 Software for predicting LIP tagged aminoacidic residues
 
 ## Requirements
+ 
+    1. Python >= 3.6 
+    2. pandas
+    3. numpy
+    4. sklearn
+    5. scipy
+    4. logging
+    5. time
+    6. json
+    7. os
+    8. sys
+    9. re
+    10. zipfile
+    11. joblib
+    12. request
+    13. Bio
+
 
 ## Usage
 
