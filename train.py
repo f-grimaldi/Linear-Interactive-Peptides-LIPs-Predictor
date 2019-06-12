@@ -39,8 +39,6 @@ parser.add_argument('-rf', '--ring_force', help='Forces the program to download 
 parser.add_argument('-rd', '--ring_dir', help='Folder where RING files will be downloaded', type=str, action='store')
 # Define pdb files download directory
 parser.add_argument('-pd', '--pdb_dir', help='Folder where PDB files will be downloaded', type=str, action='store')
-# Define output file, if any
-parser.add_argument('-of', '--out_file', help='Define in which file prediction results must be printed out', type=str, action='store')
 # Define configuration file to overwrite momentaniously overwrite the default one
 parser.add_argument('-cf', '--config_file', help='Define a custom configuration file, overwrites original parameters', type=str, action='store')
 # Parse arguments

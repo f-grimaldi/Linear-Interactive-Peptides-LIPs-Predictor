@@ -1,5 +1,56 @@
 # sbio_lip_predictor
-Predicting LIP tagged aminoacidic residues
+
+Software for predicting LIP tagged aminoacidic residues
+
+## Requirements
+
+## Usage
+
+LIP_predictor is composed of two main scripts:
+
+1. train.py
+2. predict.py
+
+*Note*: command are given from inside LIP_predictor directory in this guide.
+
+### Training
+
+Basic training: takes as input the model saved as default in ./model_files/default.joblib and retrains it with given data.
+
+```
+python3 ./train.py [options] [lip_file]
+```
+
+1. lip_file: path to training file, which contains proteins, chains LIP and non-LIP tag instruction. String;
+2. -e, --exclude: allows to exclude some proteins from the given lip_file. String;
+3. -ws, --window_size: define the size of the window used to compute an average of the residues features. Int;
+4. -rf, --ring_force: forces to download RING data, even if it has already been downloaded. Int in {0,1;
+5. -rd, --ring_dir: define directory where RING data is stored. String;
+6. -pd, --pdb_dir: define directory where PDB data is stored. String;
+7. -cf, --config_file: define a configuration file from which other settings will be loaded. JSON;
+
+### Prediction
+
+Basic prediction takes as input a PDB id and computes LIP score and LIP flag for every aminoacidic residue in the given protein.
+
+```
+python3 ./predict.py [options] [pdb_id]
+```
+
+1. pdb_id: PDB id of the protein for which LIP tags will be predicted. String;
+3. -ws, --window_size: define the size of the window used to compute an average of the residues features. Int;
+4. -rf, --ring_force: forces to download RING data, even if it has already been downloaded. Int in {0,1;
+5. -rd, --ring_dir: define directory where RING data is stored. String;
+6. -pd, --pdb_dir: define directory where PDB data is stored. String;
+7. -cf, --config_file: define a configuration file from which other settings will be loaded. JSON;
+
+### Configuration file
+
+It is possible to provide a custom configuration file for either train.py and predict., JSON formatted. Custom configuration file entries will be overwritten by command line parameters, which are considered to have higher priority.
+
+Inside custom configuration file, it is possible to spcify which kind of model we want to be trained by defining 'model' entry as a dictionary, which has two parameters itself: 'name' and 'args'.
+1. model.name: Name of the scikit-learn classifier which must be trained. String in ['RandomForestClassifier', 'LogisticRegression', 'MLPCLassifier', 'KNeighborsClassifier', 'SVC', 'QuadraticDiscriminantAnalysis'];
+2. model.args: Arguments for scikit-learn classifier chosen. Dict;
 
 ## Features extraction
 
