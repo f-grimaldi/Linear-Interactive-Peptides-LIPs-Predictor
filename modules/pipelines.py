@@ -161,6 +161,7 @@ def predict_pipeline(pdb_ids, config={}):
 
 # TODO Define pipeline used for model training
 def train_pipeline(config={}):
+    print('Reading input file...')
     # Get LIP/non-LIP file
     ds_training = pd.read_csv(config.get('lip_file'), sep='\t')
     # Extract PDB ids
@@ -190,7 +191,9 @@ def train_pipeline(config={}):
     logging.debug('Model trained')
     logging.debug(model)
     # Extract features
+    print('Starting features extraction...')
     ds_residues, ds_predict = main_pipeline(pdb_ids, config)
+    print('Features extraction: DONE.')
     # Add LIP and LIP scores
     ds_residues = LIP_tag(ds_training, ds_residues)
     # Debug
@@ -198,8 +201,9 @@ def train_pipeline(config={}):
     logging.debug(ds_predict.head())
     logging.debug(ds_residues.head())
     # Train model
+    print('Model has started training...')
     model.fit(ds_predict, ds_residues['LIP'])
-    print('New model has been trained')
+    print('Model training: DONE')
     # Overwrite the model
     dump(model, '{}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
     print('New model has been saved to disk as {}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
