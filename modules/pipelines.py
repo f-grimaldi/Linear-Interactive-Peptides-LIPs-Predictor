@@ -132,27 +132,39 @@ def main_pipeline(pdb_ids=[], config={}):
 
 # Define pipeline used for predictions
 def predict_pipeline(pdb_ids, config={}):
+    # Out
+    print('PREDICTION')
     # Retrieve datasets for prediction
+    print('Features extraction...')
     ds_residues, ds_predict = main_pipeline(pdb_ids, config)
+    print('Features extraction DONE')
     # Debug
     logging.debug(ds_predict.columns)
     # Load saved model
     model = load('{}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
+    print('Predictions are done using {}'.format(type(model).__name__))
     # Execute predictions
     LIP_SCORE, LIP = model.predict_proba(ds_predict)[:,1], model.predict(ds_predict)
     # Add columns to main DataFrame
     ds_residues['LIP_SCORE'] = LIP_SCORE
     ds_residues['LIP'] = LIP
-    # Output results
+    # Out
+    print('Predictions: DONE')
     # If out_file flag is enabled, output predictions on file
-    if config.get('out_file'):
+    if config.get('out_file') or config.get('out_dir'):
+        # Define output file
+        out_file = config.get('out_file', None)
+        # Automatically set a name for the file
+        if not out_file:
+            out_file = '{}/{}.txt'.format(re.sub("/$", "", config.get('out_dir')), pdb_ids[0])
         # Open output file
-        with open(config.get('out_file'), 'w+') as of:
+        with open(out_file, 'w+') as of:
             # Write PDB id
             of.write('{}\n'.format(pdb_ids[0]))
             # Write residues info
             for idx, res in ds_residues.iterrows():
                 of.write('{}/{}/{}//{} {} {}\n'.format(0, res['CHAIN_ID'], res['RES_ID'], res['RES_NAME'], np.round(res['LIP_SCORE'], 3), res['LIP']))
+        print('Predictions output file can be found at {}'.format(out_file))
     # Otherwise, output predictions on terminal
     else:
         for idx, res in ds_residues.iterrows():
@@ -161,7 +173,8 @@ def predict_pipeline(pdb_ids, config={}):
 
 # TODO Define pipeline used for model training
 def train_pipeline(config={}):
-    print('Reading input file...')
+    # Out
+    print('MODEL TRAINING')
     # Get LIP/non-LIP file
     ds_training = pd.read_csv(config.get('lip_file'), sep='\t')
     # Extract PDB ids
@@ -187,13 +200,14 @@ def train_pipeline(config={}):
     else:
         # Retrain stored model
         model = load('{}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
+    # Out
+    print('Model selected: {}'.format(type(model).__name__))
     # Debug
-    logging.debug('Model trained')
     logging.debug(model)
     # Extract features
-    print('Starting features extraction...')
+    print('Features extraction...')
     ds_residues, ds_predict = main_pipeline(pdb_ids, config)
-    print('Features extraction: DONE.')
+    print('Features extraction DONE')
     # Add LIP and LIP scores
     ds_residues = LIP_tag(ds_training, ds_residues)
     # Debug
@@ -201,9 +215,9 @@ def train_pipeline(config={}):
     logging.debug(ds_predict.head())
     logging.debug(ds_residues.head())
     # Train model
-    print('Model has started training...')
+    print('Model training...')
     model.fit(ds_predict, ds_residues['LIP'])
-    print('Model training: DONE')
+    print('Model training DONE')
     # Overwrite the model
     dump(model, '{}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
-    print('New model has been saved to disk as {}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))
+    print('New model has been successfully trained and saved to disk as {}/{}.joblib'.format(config.get('model_dir'), config.get('model_file')))

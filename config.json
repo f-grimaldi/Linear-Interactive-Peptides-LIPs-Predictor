@@ -30,7 +30,7 @@
   "model": {
     "name": "RandomForestClassifier",
     "args": {
-      "n_estimators": 119
+      "n_estimators": 120
     }
   }
 }

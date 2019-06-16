@@ -13,7 +13,7 @@ from modules.feature_preprocessing import *
 from modules.pipelines import *
 
 # Set debugging level (default DEBUG)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Initialize configuration dictionary
 config = {
@@ -40,6 +40,8 @@ parser.add_argument('-rf', '--ring_force', help='Forces the program to download 
 parser.add_argument('-rd', '--ring_dir', help='Folder where RING files will be downloaded', type=str, action='store')
 # Define pdb files download directory
 parser.add_argument('-pd', '--pdb_dir', help='Folder where PDB files will be downloaded', type=str, action='store')
+# Define output dir, if any
+parser.add_argument('-od', '--out_dir', help='Define in which directory a file containing prediction results must be printed out', type=str, action='store')
 # Define output file, if any
 parser.add_argument('-of', '--out_file', help='Define in which file prediction results must be printed out', type=str, action='store')
 # Define configuration file to overwrite momentaniously overwrite the default one

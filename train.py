@@ -11,7 +11,7 @@ from modules.feature_preprocessing import *
 from modules.pipelines import *
 
 # Set debugging level (default DEBUG)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Initialize configuration dictionary
 config = {
