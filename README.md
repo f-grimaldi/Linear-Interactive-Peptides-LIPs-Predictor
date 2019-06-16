@@ -42,6 +42,14 @@ python3 ./train.py [options] [lip_file]
 6. -pd, --pdb_dir: define directory where PDB data is stored. String;
 7. -cf, --config_file: define a configuration file from which other settings will be loaded. JSON;
 
+#### Example
+
+Retrain default model (the one specified in default configuration file: RandomForestClassifier with 120 estimators), but excluding the proteins with PDB id equal to _1cee_ and _1dev_. Correct LIP tags are specified in file _./datasets/lips_dataset.txt_.
+
+```BatchFile
+python train.py -e 1cee -e 1dev ./datasets/lips_dataset.txt
+```
+
 ### Prediction
 
 Basic prediction takes as input a PDB id and computes LIP score and LIP flag for every aminoacidic residue in the given protein.
@@ -56,6 +64,17 @@ python3 ./predict.py [options] [pdb_id]
 5. -rd, --ring_dir: define directory where RING data is stored. String;
 6. -pd, --pdb_dir: define directory where PDB data is stored. String;
 7. -cf, --config_file: define a configuration file from which other settings will be loaded. JSON;
+8. -of, --out_file: define the file where predictions will be printed out; String;
+9. -od, --out_dir: define the directory where prediction file will be created and written; String
+
+#### Example
+
+This example outputs a prediction for protein with PDB id equal to 1cee. The file with the prediction will be find in the current folder with the name _1cee.txt_.
+*Note* that the latest trained model will be used.
+
+```BatchFile
+python3 ./predict.py python 1cee -od ./
+```
 
 ### Configuration file
 
