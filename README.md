@@ -4,29 +4,25 @@ Software for predicting LIP tagged aminoacidic residues
 
 ## Requirements
 
-1. Python >= 3.6 
-2. pandas
-3. numpy
-4. sklearn
-5. scipy
-4. logging
-5. time
-6. json
-7. os
-8. sys
-9. re
-10. zipfile
-11. joblib
-12. request
-13. Bio
+Here is the list of libraries used during LIP predictor development, for which we guarantee the software will work.
+
+1. python >= 3.6 
+2. pandas >= 0.24.2
+3. numpy >= 1.16.2
+4. sklearn >= 0.20.3
+5. scipy >= 1.2.1
+6. joblib >= 0.13.2 
+7. requests >= 2.21.0
+8. biopython >= 1.73
+9. xssp >= 3.07 (available [here](https://github.com/cmbi/xssp))
 
 
 ## Usage
 
 LIP_predictor is composed of two main scripts:
 
-    1. train.py
-    2. predict.py
+1. train.py
+2. predict.py
 
 *Note*: command are given from inside LIP_predictor directory in this guide.
 
@@ -34,32 +30,32 @@ LIP_predictor is composed of two main scripts:
 
 Basic training: takes as input the model saved as default in ./model_files/default.joblib and retrains it with given data.
 
-```
+```BatchFile
 python3 ./train.py [options] [lip_file]
 ```
 
-    1. lip_file: path to training file, which contains proteins, chains LIP and non-LIP tag instruction. String;
-    2. -e, --exclude: allows to exclude some proteins from the given lip_file. String;
-    3. -ws, --window_size: define the size of the window used to compute an average of the residues features. Int;
-    4. -rf, --ring_force: forces to download RING data, even if it has already been downloaded. Int in {0,1;
-    5. -rd, --ring_dir: define directory where RING data is stored. String;
-    6. -pd, --pdb_dir: define directory where PDB data is stored. String;
-    7. -cf, --config_file: define a configuration file from which other settings will be loaded. JSON;
+1. lip_file: path to training file, which contains proteins, chains LIP and non-LIP tag instruction. String;
+2. -e, --exclude: allows to exclude some proteins from the given lip_file. String;
+3. -ws, --window_size: define the size of the window used to compute an average of the residues features. Int;
+4. -rf, --ring_force: forces to download RING data, even if it has already been downloaded. Int in {0,1};
+5. -rd, --ring_dir: define directory where RING data is stored. String;
+6. -pd, --pdb_dir: define directory where PDB data is stored. String;
+7. -cf, --config_file: define a configuration file from which other settings will be loaded. JSON;
 
 ### Prediction
 
 Basic prediction takes as input a PDB id and computes LIP score and LIP flag for every aminoacidic residue in the given protein.
 
-```
+```BatchFile
 python3 ./predict.py [options] [pdb_id]
 ```
 
-    1. pdb_id: PDB id of the protein for which LIP tags will be predicted. String;
-    3. -ws, --window_size: define the size of the window used to compute an average of the residues features. Int;
-    4. -rf, --ring_force: forces to download RING data, even if it has already been downloaded. Int in {0,1;
-    5. -rd, --ring_dir: define directory where RING data is stored. String;
-    6. -pd, --pdb_dir: define directory where PDB data is stored. String;
-    7. -cf, --config_file: define a configuration file from which other settings will be loaded. JSON;
+1. pdb_id: PDB id of the protein for which LIP tags will be predicted. String;
+3. -ws, --window_size: define the size of the window used to compute an average of the residues features. Int;
+4. -rf, --ring_force: forces to download RING data, even if it has already been downloaded. Int in {0,1};
+5. -rd, --ring_dir: define directory where RING data is stored. String;
+6. -pd, --pdb_dir: define directory where PDB data is stored. String;
+7. -cf, --config_file: define a configuration file from which other settings will be loaded. JSON;
 
 ### Configuration file
 
@@ -69,8 +65,8 @@ It is possible to provide a custom configuration file for either train.py and pr
 
 Inside custom configuration file, it is possible to spcify which kind of model we want to be trained by defining 'model' entry as a dictionary, which has two parameters itself: 'name' and 'args'.
 
-    1. model.name: Name of the scikit-learn classifier which must be trained. String in ['RandomForestClassifier', 'LogisticRegression', 'MLPCLassifier', 'KNeighborsClassifier', 'SVC', 'QuadraticDiscriminantAnalysis'];
-    2. model.args: Arguments for scikit-learn classifier chosen. Dict;
+1. model.name: Name of the scikit-learn classifier which must be trained. String in ['RandomForestClassifier', 'LogisticRegression', 'MLPCLassifier', 'KNeighborsClassifier', 'SVC', 'QuadraticDiscriminantAnalysis'];
+2. model.args: Arguments for scikit-learn classifier chosen. Dict;
 
 ## Features extraction
 
@@ -88,14 +84,14 @@ PDB database is downloaded from server using BioPython utils, saved in the appro
 
 Table:
 
-    PDB_ID: id of the protein; String;
-    MODEL_ID: model contained into the protein; Int;
-    CHAIN_ID: chain contained in the model. We kept only the 0-th model; Char;
-    CHAIN_LEN: length of the chain. Equal value for every entry given same triple (PDB_ID, MODEL_ID, CHAIN_ID); Int;
-    RES_ID: residue id of a specific aminoacid. String casted to Int;
-    RES_NAME: name of the aminoacid which composes the residue; String;
-    LIP_SCORE: probability of being a Linear Interacting Peptide, assigned by a trained ML model (in case of prediction) or manually flagged (in case of model training). Takes values in [0,1];
-    LIP: defines if a residue is a LIP. Takes values in {0,1};
+1. PDB_ID: id of the protein; String;
+2. MODEL_ID: model contained into the protein; Int;
+3. CHAIN_ID: chain contained in the model. We kept only the 0-th model; Char;
+4. CHAIN_LEN: length of the chain. Equal value for every entry given same triple (PDB_ID, MODEL_ID, CHAIN_ID); Int;
+5. RES_ID: residue id of a specific aminoacid. String casted to Int;
+6. RES_NAME: name of the aminoacid which composes the residue; String;
+7. LIP_SCORE: probability of being a Linear Interacting Peptide, assigned by a trained ML model (in case of prediction) or manually flagged (in case of model training). Takes values in [0,1];
+8. LIP: defines if a residue is a LIP. Takes values in {0,1};
 
 ### DSSP
 
@@ -103,13 +99,13 @@ DSSP features extracted using DSSP program through BioPython DSSP interface. Ret
 
 Table:
 
-    PDB_ID: see PDB;
-    CHAIN_ID: see PDB;
-    RES_ID: see PDB;
-    SEC_STRUCT: defines to which secondary structure the residue belongs. String;
-    REL_ASA: RELative Absolute Solvent Accessibility measusres the surface of the residue exposed to the solvent. Takes values in [0,1];
-    PHI, PSI: dihedral angles of the aminoacid, expressed in degrees. If the angle does not exist, its value will be 360. Takes values in [0, 360]
-    NH_O_1_relidx, NH_O_1_energy, O_NH_1_relidx, O_NH_1_energy, NH_O_2_relidx, H_O_2_energy, O_NH_2_relidx, O_NH_2_energy: energy values. Double;
+1. PDB_ID: see PDB;
+2. CHAIN_ID: see PDB;
+3. RES_ID: see PDB;
+4. SEC_STRUCT: defines to which secondary structure the residue belongs. String;
+5. REL_ASA: RELative Absolute Solvent Accessibility measusres the surface of the residue exposed to the solvent. Takes values in [0,1];
+6. PHI, PSI: dihedral angles of the aminoacid, expressed in degrees. If the angle does not exist, its value will be 360. Takes values in [0, 360]
+7. NH_O_1_relidx, NH_O_1_energy, O_NH_1_relidx, O_NH_1_energy, NH_O_2_relidx, H_O_2_energy, O_NH_2_relidx, O_NH_2_energy: energy values. Double;
 
 ### RING
 
@@ -117,14 +113,14 @@ RING features are extracted by a request to RING APIs. First, the "elaborate" PO
 
 Table:
 
-    PDB_ID: see PDB;
-    CHAIN_ID: see PDB;
-    RES_ID: see PDB;
-    EDGE_LOC: locations where contacts are formed; Strings separated by space charachter ('');
-    EDGE_TYPE: type of contacts; Strings separated by space charachter (' ');
-    INTRA_CONTACTS: number of intra-chain contacts formed by the aminoacid. Int;
-    INTER_CONTACTS: number of inter-chain contacts formed by the aminoacid. Int;
-    INTRA_INTER_CONTACTS: intra-chain contacts / inter-chain contacts ratio of the aminoacid. Double;
+1. PDB_ID: see PDB;
+2. CHAIN_ID: see PDB;
+3. RES_ID: see PDB;
+4. EDGE_LOC: locations where contacts are formed; Strings separated by space charachter ('');
+5. EDGE_TYPE: type of contacts; Strings separated by space charachter (' ');
+6. INTRA_CONTACTS: number of intra-chain contacts formed by the aminoacid. Int;
+7. INTER_CONTACTS: number of inter-chain contacts formed by the aminoacid. Int;
+8. INTRA_INTER_CONTACTS: intra-chain contacts / inter-chain contacts ratio of the aminoacid. Double;
 
 
 ## Feature pre-proccesing
@@ -137,9 +133,9 @@ Categorical Features such the name of the residues or the type of secondary stru
 
 This procedure has been done for the following features: <br>
       
-    1. Type of residues
-    2. Type of secondary structure
-    3. Type of contacts
+1. Type of residues
+2. Type of secondary structure
+3. Type of contacts
     
 ### Sliding Window
 
@@ -147,14 +143,14 @@ In order to get information of the context, a sliding windows by a rolling proce
 
 Parameters of sliding windows:
 
-    1. windows size (integer, default = 5): size of the windows (usually an odd number for symmetric purpose). 
-    2. std (float, default = 1): standard deviation of the gaussian filter. Higher values mean a minor decrease of the multiplicative factor as the distance increase.
+1. windows size (integer, default = 5): size of the windows (usually an odd number for symmetric purpose). 
+2. std (float, default = 1): standard deviation of the gaussian filter. Higher values mean a minor decrease of the multiplicative factor as the distance increase.
 
 
 N.B.
 For the first values and the last values of every chain, it has been create a mirroring of their next/previous residues. E.G:
        
-     res1, res2, res3 --> res3, res2, res1, res2, res3
+&nbsp;&nbsp;res1, res2, res3 --> res3, res2, res1, res2, res3
      
 ## Model
 
@@ -180,16 +176,16 @@ After a grid search the best parameters apperead to be a *sliding windows betwee
 
 ___FINAL MODEL___
 
-    1. Sliding Windows:
-       a) Windows Size = 5
-       b) Standard Deviation = 1
-    2. Classifier: 
-       a) Type = Random Forest Classifier:
-       b) Parameters = {n_estimator: 100}
+1. Sliding Windows:
+   a) Windows Size = 5
+   b) Standard Deviation = 1
+2. Classifier: 
+   a) Type = Random Forest Classifier:
+   b) Parameters = {n_estimator: 100}
   
 ___CURRENT VALIDATION RESULT___
 
 For every protein has been computed balanced accuracy and f1 score and the final results are the avarage of this two scores of every protein. Random seed not set 
 
-    1. Balanced Accuracy: 0.930 
-    2. F1-Score: 0.894
+1. Balanced Accuracy: 0.930 
+2. F1-Score: 0.894
