@@ -34,7 +34,7 @@ Basic training: takes as input the model saved as default in ./model_files/defau
 python3 ./train.py [options] [lip_file]
 ```
 
-1. lip_file: path to training file, which contains proteins, chains LIP and non-LIP tag instruction. String;
+1. lip_file: path to training file, which contains proteins, chains and LIP/non-LIP tag instruction. String;
 2. -e, --exclude: allows to exclude some proteins from the given lip_file. String;
 3. -ws, --window_size: define the size of the window used to compute an average of the residues features. Int;
 4. -rf, --ring_force: forces to download RING data, even if it has already been downloaded. Int in {0,1};
